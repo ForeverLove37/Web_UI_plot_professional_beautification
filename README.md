@@ -74,8 +74,7 @@ python main.py
 AcademicPlotPro/
 ├── src/                    # 源代码目录
 │   ├── core/              # 核心处理模块
-│   │   ├── enhanced_agent.py      # 增强版处理代理
-│   │   └── zh_translator_agent_v2.py  # 原始代理
+│   │   └── enhanced_agent.py      # 增强版处理代理
 │   └── web/               # Web应用模块
 │       ├── app.py         # Flask应用
 │       ├── static/        # 静态资源
@@ -115,7 +114,6 @@ AcademicPlotPro/
 ```
 ├── app.py                 # Flask Web应用程序
 ├── enhanced_agent.py      # 增强版处理代理
-├── zh_translator_agent_v2.py  # 原始代理文件
 ├── templates/
 │   └── index.html        # 主页面模板
 ├── static/
