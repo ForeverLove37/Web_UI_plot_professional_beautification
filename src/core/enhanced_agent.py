@@ -20,7 +20,7 @@ PAPER_FORMATS = {
         'name': 'Nature',
         'single_column': (3.35, 2.5),  # 85mm width
         'double_column': (7.08, 4.0),  # 180mm width
-        'font_family': ['Arial', 'Helvetica'],
+        'font_family': ['SimHei', 'Microsoft YaHei', 'Arial', 'Helvetica', 'sans-serif'],
         'title_size': 12,
         'label_size': 10,
         'tick_size': 8,
@@ -53,7 +53,7 @@ PAPER_FORMATS = {
         'name': 'Science',
         'single_column': (3.35, 2.5),  # 85mm width
         'double_column': (7.08, 4.0),  # 180mm width
-        'font_family': ['Arial', 'Helvetica'],
+        'font_family': ['SimHei', 'Microsoft YaHei', 'Arial', 'Helvetica', 'sans-serif'],
         'title_size': 12,
         'label_size': 10,
         'tick_size': 8,
@@ -159,13 +159,14 @@ def refactor_and_style_code(code_content: str, style_options: Dict[str, Any]) ->
 
         academic_instructions = f"""
 3. **应用 {format_config['name']} 学术出版风格**:
-   - **字体与字号**: 注入 `plt.rcParams.update()` 来全局设置字体。使用 {format_config['font_family'][0]} 字体。具体字号 (pt) 要求如下:
+   - **字体与字号**: 注入 `plt.rcParams.update()` 来全局设置字体。使用支持中文的字体（如 SimHei, Microsoft YaHei）。具体字号 (pt) 要求如下:
      - 图表标题 (Title): {format_config['title_size']} pt
      - 坐标轴标签 (Axis Labels): {format_config['label_size']} pt
      - 坐标轴刻度 (Tick Labels): {format_config['tick_size']} pt
      - 图例 (Legend): {format_config['legend_size']} pt
    - **图表尺寸**: 找到创建图表的代码行（如 `plt.figure()` 或 `plt.subplots()`），将其 `figsize` 参数修改或设置为 `{figsize_str}`。
    - **分辨率**: 设置图像分辨率为 {format_config['dpi']} DPI
+   - **重要**: 确保字体设置不会覆盖已有的中文支持配置。如果代码中已有中文字体设置，请保留它们。
 """
         instructions.append(academic_instructions)
 
@@ -259,6 +260,7 @@ def inject_chinese_font_support(code_lines: List[str]) -> List[str]:
 def create_academic_style_code_block(options: Dict[str, Any]) -> str:
     """
     根据用户选项生成 Matplotlib rcParams 的 Python 代码块。
+    优化字体配置逻辑，避免中文显示冲突。
     """
     paper_format = options.get('paper_format', 'nature')
     layout = options.get('layout', 'single')
@@ -271,13 +273,27 @@ def create_academic_style_code_block(options: Dict[str, Any]) -> str:
     else:
         figsize = format_config['double_column']
         figsize_str = f"{figsize} # {format_config['name']} 双栏宽度"
+    
+    # 检查是否需要中文支持（如果原始代码包含中文字符）
+    # 这里我们假设如果用户选择了学术模式，可能需要中文支持
+    # 在实际应用中，可以更精确地检测是否需要中文支持
+    needs_chinese_support = True  # 保守起见，默认启用中文支持
+    
+    # 构建字体配置，优先考虑中文支持
+    if needs_chinese_support:
+        # 对于需要中文支持的场景，优先使用支持中文的字体
+        font_family_config = format_config['font_family']
+        # 确保字体族配置不会覆盖中文支持
+        font_config = f"'font.family': 'sans-serif',\n    'font.sans-serif': {font_family_config},"
+    else:
+        # 对于纯英文场景，使用标准配置
+        font_config = f"'font.family': 'sans-serif',\n    'font.sans-serif': {format_config['font_family']},"
         
     style_settings = f"""
 # --- {format_config['name']} 学术风格注入 ---
 # 设置字体和字号以符合出版标准
 plt.rcParams.update({{
-    'font.family': 'sans-serif',
-    'font.sans-serif': {format_config['font_family']},
+    {font_config}
     'font.size': {format_config['label_size']},          # 全局基础字号
     'axes.titlesize': {format_config['title_size']},     # 图表标题字号
     'axes.labelsize': {format_config['label_size']},     # 坐标轴标签字号
@@ -294,6 +310,7 @@ plt.rcParams.update({{
 def inject_savefig_before_show(code_lines: List[str], vector_format: Optional[str], original_filepath: str, dpi: int = 300) -> List[str]:
     """
     在代码中找到 plt.show() 并在其之前插入保存矢量图的命令。
+    使用相对路径保存图像，确保用户可以在任何目录运行脚本。
     """
     if not vector_format:
         return code_lines
@@ -306,15 +323,17 @@ def inject_savefig_before_show(code_lines: List[str], vector_format: Optional[st
             break
             
     if show_line_index != -1:
-        base, _ = os.path.splitext(original_filepath)
-        # 生成保存文件的路径，例如 001_figure.pdf
+        # 获取原始文件名（不含路径和扩展名）
+        original_filename = os.path.basename(original_filepath)
+        base, _ = os.path.splitext(original_filename)
+        # 生成相对路径文件名，例如 001_figure.pdf
         output_filename = f"{base}_figure.{vector_format}"
         
         savefig_line = f"\n# 保存为矢量图格式\nplt.savefig('{output_filename}', bbox_inches='tight', dpi={dpi})\n"
         
         # 在 plt.show() 之前插入保存命令
         code_lines.insert(show_line_index, savefig_line)
-        print(f"已注入保存矢量图的代码，将保存至: {output_filename}")
+        print(f"已注入保存矢量图的代码，将保存至相对路径: {output_filename}")
     else:
         print("警告：未找到 'plt.show()'，无法自动注入保存矢量图的代码。")
         
