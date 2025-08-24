@@ -192,7 +192,7 @@ class AcademicPlotApp {
         processBtn.disabled = !this.currentFile || this.isProcessing;
     }
 
-    async processFile() {
+    processFile() {
         if (!this.currentFile || this.isProcessing) return;
 
         this.isProcessing = true;
@@ -223,35 +223,78 @@ class AcademicPlotApp {
             }
         }
 
-        try {
-            const response = await fetch('/process', {
-                method: 'POST',
-                body: formData
-            });
-
+        // Use fetch with streaming response
+        fetch('/process', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `服务器错误: ${response.status} ${response.statusText}`);
-            }
-
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showSuccess(result.download_url);
-                this.updateStatus('处理完成！', 'success');
-            } else {
-                throw new Error(result.error || '处理失败');
+                throw new Error('Network response was not ok');
             }
             
-        } catch (error) {
-            console.error('Processing error:', error);
-            this.showError('处理错误: ' + error.message);
+            // Create a reader to read the stream
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            
+            function readStream() {
+                return reader.read().then(({ done, value }) => {
+                    if (done) {
+                        return;
+                    }
+                    
+                    // Decode the chunk and process SSE messages
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.substring(6));
+                                
+                                if (data.error) {
+                                    this.showError('处理错误: ' + data.error);
+                                    this.updateStatus('处理失败', 'error');
+                                    this.isProcessing = false;
+                                    this.hideLoading();
+                                    this.updateProcessButton();
+                                    return;
+                                }
+                                
+                                if (data.status) {
+                                    this.updateStatus(data.status, 'warning');
+                                }
+                                
+                                if (data.success) {
+                                    this.showSuccess(data.download_url);
+                                    this.updateStatus('处理完成！', 'success');
+                                    this.isProcessing = false;
+                                    this.hideLoading();
+                                    this.updateProcessButton();
+                                    return;
+                                }
+                                
+                            } catch (error) {
+                                console.error('Error parsing SSE message:', error, line);
+                            }
+                        }
+                    }
+                    
+                    // Continue reading the stream
+                    return readStream();
+                });
+            }
+            
+            return readStream();
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            this.showError('请求发送失败: ' + error.message);
             this.updateStatus('处理失败', 'error');
-        } finally {
             this.isProcessing = false;
             this.hideLoading();
             this.updateProcessButton();
-        }
+        });
     }
 
     toggleAcademicOptions(enabled) {

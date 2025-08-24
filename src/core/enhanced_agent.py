@@ -4,9 +4,13 @@ import requests
 import json
 import ast
 from typing import Dict, Any, List, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # --- 配置区 ---
-DEEPSEEK_API_KEY = "sk-5d832b2f7c0a4f1187c3c2c619c680f4"
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 
 TARGET_PLOT_FUNCTIONS = {
@@ -76,8 +80,8 @@ PAPER_FORMATS = {
 # --- DeepSeek API 调用封装 ---
 def call_deepseek_api(prompt: str, is_json_mode: bool = False) -> Optional[str]:
     """调用 DeepSeek API 的通用函数"""
-    if not DEEPSEEK_API_KEY or "xxxxxxxx" in DEEPSEEK_API_KEY:
-        raise ValueError("请在 DEEPSEEK_API_KEY 变量中设置你的有效 API Key")
+    if not DEEPSEEK_API_KEY:
+        raise ValueError("请在 .env 文件中设置 DEEPSEEK_API_KEY 环境变量")
 
     payload = {
         "model": "deepseek-chat",
@@ -339,26 +343,29 @@ def inject_savefig_before_show(code_lines: List[str], vector_format: Optional[st
         
     return code_lines
 
-def process_python_file(filepath: str, beautify: bool = False, academic_options: Optional[Dict[str, Any]] = None) -> None:
+def process_python_file_streaming(filepath: str, beautify: bool = False, academic_options: Optional[Dict[str, Any]] = None):
     """
     处理单个Python文件：翻译、风格化，并应用备用注入方案。
+    返回一个生成器，用于流式传输处理状态。
     """
-    print(f"--- 开始处理文件: {filepath} ---")
-
+    yield "开始处理文件..."
+    
     if academic_options is None:
         academic_options = {'enabled': False}
 
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             original_code = f.read()
+        yield "文件读取成功"
     except Exception as e:
-        print(f"读取文件失败: {e}")
+        yield f"读取文件失败: {e}"
         return
 
     try:
         tree = ast.parse(original_code)
+        yield "代码语法解析成功"
     except SyntaxError as e:
-        print(f"Python 代码语法错误，无法解析: {e}")
+        yield f"Python 代码语法错误，无法解析: {e}"
         return
 
     texts_to_translate = {}
@@ -380,12 +387,12 @@ def process_python_file(filepath: str, beautify: bool = False, academic_options:
     
     translated_code = original_code
     if texts_to_translate:
-        print(f"找到 {len(texts_to_translate)} 条需要翻译的文本，正在请求翻译...")
+        yield f"找到 {len(texts_to_translate)} 条需要翻译的文本，正在请求翻译..."
         translation_map = translate_texts(texts_to_translate)
         if not translation_map:
-            print("翻译失败，跳过翻译步骤。")
+            yield "翻译失败，跳过翻译步骤。"
         else:
-            print("翻译完成，开始重建代码...")
+            yield "翻译完成，开始重建代码..."
             sorted_eng_texts = sorted(translation_map.keys(), key=len, reverse=True)
             modified_code = original_code
             for eng_text in sorted_eng_texts:
@@ -402,11 +409,12 @@ def process_python_file(filepath: str, beautify: bool = False, academic_options:
                 modified_code = '\n'.join(temp_lines)
             translated_code = modified_code
     else:
-        print("未找到需要翻译的英文文本。")
+        yield "未找到需要翻译的英文文本。"
 
     modified_code_lines = translated_code.split('\n')
     if not any("plt.rcParams['font.sans-serif']" in line for line in modified_code_lines):
         inject_chinese_font_support(modified_code_lines)
+        yield "已注入中文字体支持"
     
     final_code_with_font_support = '\n'.join(modified_code_lines)
     final_code = final_code_with_font_support
@@ -414,22 +422,23 @@ def process_python_file(filepath: str, beautify: bool = False, academic_options:
     refactored_result = None
     if beautify or (academic_options and academic_options.get('enabled')):
         base, _ = os.path.splitext(filepath)
-        output_filename_base = f"{base}_figure" # 传递给 AI 用于生成保存文件名
+        output_filename_base = f"{base}_figure"
 
         style_options = academic_options if academic_options else {}
         style_options['beautify_layout'] = beautify
         style_options['output_filename_base'] = output_filename_base
         
+        yield "开始AI代码重构与风格美化..."
         refactored_result = refactor_and_style_code(final_code_with_font_support, style_options)
         
         if refactored_result:
             final_code = refactored_result
-            print("AI 代码重构与风格美化成功。")
+            yield "AI 代码重构与风格美化成功"
         else:
-            print("AI 代码重构失败或跳过。")
+            yield "AI 代码重构失败或跳过"
 
     if not refactored_result and academic_options and academic_options.get('enabled'):
-        print("正在执行备用方案：直接注入学术风格代码...")
+        yield "正在执行备用方案：直接注入学术风格代码..."
         code_lines = final_code.split('\n')
         
         matplotlib_import_index = -1
@@ -441,9 +450,9 @@ def process_python_file(filepath: str, beautify: bool = False, academic_options:
         if matplotlib_import_index != -1:
             style_code_block = create_academic_style_code_block(academic_options)
             code_lines.insert(matplotlib_import_index + 1, style_code_block)
-            print("已注入字体、字号和尺寸设置。")
+            yield "已注入字体、字号和尺寸设置"
         else:
-            print("警告：未找到 matplotlib 导入语句，无法注入样式代码。")
+            yield "警告：未找到 matplotlib 导入语句，无法注入样式代码"
 
         vector_format = academic_options.get('vector_format')
         dpi = academic_options.get('dpi', 300)
@@ -457,9 +466,10 @@ def process_python_file(filepath: str, beautify: bool = False, academic_options:
     try:
         with open(new_filepath, 'w', encoding='utf-8') as f:
             f.write(final_code)
-        print(f"--- 处理完成！修改后的文件已保存至: {new_filepath} ---")
+        yield f"处理完成！修改后的文件已保存至: {new_filepath}"
+        yield f"SUCCESS:{new_filepath}"
     except Exception as e:
-        print(f"保存文件失败: {e}")
+        yield f"保存文件失败: {e}"
 
 # --- 主程序入口 ---
 if __name__ == '__main__':

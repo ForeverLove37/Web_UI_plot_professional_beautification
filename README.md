@@ -37,6 +37,22 @@
 - Python 3.7+
 - pip包管理器
 
+### 环境配置
+
+1. **复制环境变量文件**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **编辑 .env 文件**:
+   - 设置你的 DeepSeek API 密钥: `DEEPSEEK_API_KEY=your_actual_api_key_here`
+   - 设置 Flask 密钥 (可选): `FLASK_SECRET_KEY=your_secret_key_here`
+
+3. **获取 DeepSeek API 密钥**:
+   - 访问 [DeepSeek 官网](https://platform.deepseek.com/)
+   - 注册账号并获取 API 密钥
+   - 将密钥添加到 .env 文件中
+
 ### 一键安装和启动
 
 **Windows用户**:
