@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AcademicPlot Pro - AI学术图表美化工具</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>AcademicPlot Pro</h1>
+                        <p class="subtitle">AI驱动的学术图表翻译与美化专家</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-help" title="使用帮助">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <div class="main-grid">
+                <!-- Left Column - File Upload & Actions -->
+                <div class="left-column">
+                    <!-- File Upload Card -->
+                    <div class="card upload-card">
+                        <div class="card-header">
+                            <i class="fas fa-file-upload"></i>
+                            <h2>上传Python图表文件</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-container">
+                                <div class="drop-zone" id="dropZone">
+                                    <div class="drop-content">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <h3>拖放文件到此处</h3>
+                                        <p>或点击选择Python文件 (.py)</p>
+                                        <span class="file-types">支持 .py 格式文件</span>
+                                    </div>
+                                    <input type="file" id="fileInput" accept=".py" class="file-input" />
+                                </div>
+                                
+                                <div class="file-preview" id="filePreview">
+                                    <div class="file-info">
+                                        <i class="fas fa-file-code"></i>
+                                        <div class="file-details">
+                                            <span class="file-name" id="fileName"></span>
+                                            <span class="file-size" id="fileSize"></span>
+                                        </div>
+                                        <button class="btn-remove" id="removeFile" title="移除文件">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Card -->
+                    <div class="card action-card">
+                        <div class="card-header">
+                            <i class="fas fa-play-circle"></i>
+                            <h2>开始处理</h2>
+                        </div>
+                        <div class="card-body">
+                            <button id="processBtn" class="btn-process" disabled>
+                                <span class="btn-icon">
+                                    <i class="fas fa-magic"></i>
+                                </span>
+                                <span class="btn-text">开始AI处理</span>
+                                <span class="btn-loading" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    处理中...
+                                </span>
+                            </button>
+                            
+                            <div class="process-status" id="processStatus">
+                                <div class="status-item">
+                                    <i class="fas fa-check-circle status-success"></i>
+                                    <span>等待文件上传</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Card -->
+                    <div class="card results-card" id="resultsCard">
+                        <div class="card-header">
+                            <i class="fas fa-check-circle"></i>
+                            <h2>处理结果</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="results-content" id="resultsContent">
+                                <div class="results-placeholder">
+                                    <i class="fas fa-file-export"></i>
+                                    <p>处理完成后将显示结果</p>
+                                </div>
+                                
+                                <div class="results-success" style="display: none;">
+                                    <div class="success-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <h3>处理成功！</h3>
+                                    <p>文件已处理完成，可以下载结果</p>
+                                    <a id="downloadLink" class="btn-download-result" href="#">
+                                        <i class="fas fa-download"></i>
+                                        下载处理结果
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Settings -->
+                <div class="right-column">
+                    <!-- Settings Accordion -->
+                    <div class="settings-accordion">
+                        <!-- Basic Settings -->
+                        <div class="accordion-item">
+                            <div class="accordion-header" data-target="basicSettings">
+                                <i class="fas fa-cog"></i>
+                                <h3>基本设置</h3>
+                                <i class="accordion-arrow fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content" id="basicSettings">
+                                <div class="setting-group">
+                                    <label class="switch-label">
+                                        <span class="label-text">AI布局美化</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="beautifyToggle" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </label>
+                                    <p class="setting-description">智能优化图表布局和排列</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Settings -->
+                        <div class="accordion-item">
+                            <div class="accordion-header" data-target="academicSettings">
+                                <i class="fas fa-graduation-cap"></i>
+                                <h3>学术风格设置</h3>
+                                <i class="accordion-arrow fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content" id="academicSettings">
+                                <div class="setting-group">
+                                    <label class="switch-label">
+                                        <span class="label-text">启用学术论文风格</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="academicToggle">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </label>
+                                    <p class="setting-description">应用学术期刊出版标准样式</p>
+                                </div>
+
+                                <div class="academic-options" id="academicOptions" style="display: none;">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="paperFormat">论文格式</label>
+                                            <select id="paperFormat" class="form-select">
+                                                {% for key, config in paper_formats.items() %}
+                                                    <option value="{{ key }}">{{ config.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="layout">图表布局</label>
+                                            <select id="layout" class="form-select">
+                                                <option value="single">单栏</option>
+                                                <option value="double">双栏</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="vectorFormat">导出格式</label>
+                                            <select id="vectorFormat" class="form-select">
+                                                <option value="">不保存</option>
+                                                <option value="pdf">PDF</option>
+                                                <option value="svg">SVG</option>
+                                                <option value="eps">EPS</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="dpi">分辨率 (DPI)</label>
+                                            <div class="slider-container">
+                                                <input type="range" id="dpi" min="72" max="1200" value="300" class="form-slider">
+                                                <span class="slider-value" id="dpiValue">300 DPI</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Settings -->
+                        <div class="accordion-item">
+                            <div class="accordion-header" data-target="customSettings">
+                                <i class="fas fa-sliders-h"></i>
+                                <h3>自定义设置</h3>
+                                <i class="accordion-arrow fas fa-chevron-down"></i>
+                            </div>
+                            <div class="accordion-content" id="customSettings">
+                                <div class="setting-group">
+                                    <label class="switch-label">
+                                        <span class="label-text">启用自定义参数</span>
+                                        <label class="switch">
+                                            <input type="checkbox" id="customToggle">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </label>
+                                    <p class="setting-description">手动调整详细参数设置</p>
+                                </div>
+
+                                <div class="custom-options" id="customOptions" style="display: none;">
+                                    <div class="form-grid">
+                                        <div class="form-group">
+                                            <label for="fontSize">字体大小</label>
+                                            <div class="slider-container">
+                                                <input type="range" id="fontSize" min="6" max="24" value="10" class="form-slider">
+                                                <span class="slider-value" id="fontSizeValue">10 pt</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="titleSize">标题大小</label>
+                                            <div class="slider-container">
+                                                <input type="range" id="titleSize" min="8" max="24" value="12" class="form-slider">
+                                                <span class="slider-value" id="titleSizeValue">12 pt</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="figWidth">图表宽度</label>
+                                            <div class="slider-container">
+                                                <input type="range" id="figWidth" min="1" max="20" step="0.1" value="3.35" class="form-slider">
+                                                <span class="slider-value" id="figWidthValue">3.35 英寸</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="figHeight">图表高度</label>
+                                            <div class="slider-container">
+                                                <input type="range" id="figHeight" min="1" max="20" step="0.1" value="2.5" class="form-slider">
+                                                <span class="slider-value" id="figHeightValue">2.5 英寸</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label for="customDpi">自定义DPI</label>
+                                            <div class="slider-container">
+                                                <input type="range" id="customDpi" min="72" max="1200" value="300" class="form-slider">
+                                                <span class="slider-value" id="customDpiValue">300 DPI</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>&copy; 2024 AcademicPlot Pro. 由 DeepSeek AI 提供技术支持</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link" id="userGuideLink">使用指南</a>
+                    <a href="#" class="footer-link">反馈问题</a>
+                    <a href="#" class="footer-link">关于我们</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- User Guide Modal -->
+    <div id="userGuideModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>使用指南</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="guide-step">
+                    <h3>步骤 1: 上传文件</h3>
+                    <p>将您的Python绘图脚本文件 (.py) 拖放到上传区域，或点击选择文件。</p>
+                </div>
+                <div class="guide-step">
+                    <h3>步骤 2: 配置设置</h3>
+                    <p>打开右侧的设置面板（基本设置、学术风格、自定义）来定制美化选项。</p>
+                </div>
+                <div class="guide-step">
+                    <h3>步骤 3: 开始处理</h3>
+                    <p>点击"开始AI处理"按钮开始处理您的文件。</p>
+                </div>
+                <div class="guide-step">
+                    <h3>步骤 4: 下载结果</h3>
+                    <p>处理完成后，处理结果区域将显示下载链接。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
