@@ -471,6 +471,138 @@ def process_python_file_streaming(filepath: str, beautify: bool = False, academi
     except Exception as e:
         yield f"保存文件失败: {e}"
 
+def process_python_file_streaming(filepath: str, output_folder: str, beautify: bool = False, academic_options: Optional[Dict[str, Any]] = None):
+    """
+    处理单个Python文件：翻译、风格化，并应用备用注入方案。
+    返回一个生成器，用于流式传输处理状态。
+    """
+    yield "开始处理文件..."
+    
+    if academic_options is None:
+        academic_options = {'enabled': False}
+
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            original_code = f.read()
+        yield "文件读取成功"
+    except Exception as e:
+        yield f"读取文件失败: {e}"
+        return
+
+    try:
+        tree = ast.parse(original_code)
+    except SyntaxError as e:
+        yield f"Python 代码语法错误，无法解析: {e}"
+        return
+
+    texts_to_translate = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and hasattr(node.func, 'attr') and node.func.attr in TARGET_PLOT_FUNCTIONS:
+            for arg in node.args:
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str) and arg.value.strip():
+                    texts_to_translate[arg.value] = arg.value
+            for kw in node.keywords:
+                if isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str) and kw.value.value.strip():
+                    texts_to_translate[kw.value.value] = kw.value.value
+    code_lines = original_code.split('\n')
+    for line in code_lines:
+        line_stripped = line.strip()
+        if line_stripped.startswith('#'):
+            comment_text = line_stripped[1:].strip()
+            if comment_text and re.search('[a-zA-Z]', comment_text):
+                texts_to_translate[comment_text] = comment_text
+    
+    translated_code = original_code
+    if texts_to_translate:
+        yield f"找到 {len(texts_to_translate)} 条需要翻译的文本，正在请求翻译..."
+        translation_map = translate_texts(texts_to_translate)
+        if not translation_map:
+            yield "翻译失败，跳过翻译步骤。"
+        else:
+            yield "翻译完成，开始重建代码..."
+            sorted_eng_texts = sorted(translation_map.keys(), key=len, reverse=True)
+            modified_code = original_code
+            for eng_text in sorted_eng_texts:
+                zh_text = translation_map.get(eng_text, eng_text)
+                modified_code = modified_code.replace(f'"{eng_text}"', f'"{zh_text}"')
+                modified_code = modified_code.replace(f"'{eng_text}'", f"'{zh_text}'")
+                temp_lines = []
+                for line in modified_code.split('\n'):
+                    stripped_line = line.strip()
+                    if stripped_line.startswith(f'# {eng_text}') or stripped_line.startswith(f'#{eng_text}'):
+                        temp_lines.append(line.replace(eng_text, zh_text))
+                    else:
+                        temp_lines.append(line)
+                modified_code = '\n'.join(temp_lines)
+            translated_code = modified_code
+    else:
+        yield "未找到需要翻译的英文文本。"
+
+    modified_code_lines = translated_code.split('\n')
+    if not any("plt.rcParams['font.sans-serif']" in line for line in modified_code_lines):
+        inject_chinese_font_support(modified_code_lines)
+        yield "已注入中文字体支持"
+    
+    final_code_with_font_support = '\n'.join(modified_code_lines)
+    final_code = final_code_with_font_support
+    
+    refactored_result = None
+    if beautify or (academic_options and academic_options.get('enabled')):
+        base, _ = os.path.splitext(filepath)
+        output_filename_base = f"{base}_figure"
+
+        style_options = academic_options if academic_options else {}
+        style_options['beautify_layout'] = beautify
+        style_options['output_filename_base'] = output_filename_base
+        
+        yield "开始AI代码重构与风格美化..."
+        refactored_result = refactor_and_style_code(final_code_with_font_support, style_options)
+        
+        if refactored_result:
+            final_code = refactored_result
+            yield "AI 代码重构与风格美化成功。"
+        else:
+            yield "AI 代码重构失败或跳过。"
+
+    if not refactored_result and academic_options and academic_options.get('enabled'):
+        yield "正在执行备用方案：直接注入学术风格代码..."
+        code_lines = final_code.split('\n')
+        
+        matplotlib_import_index = -1
+        for i, line in enumerate(code_lines):
+            if re.search(r'import\s+matplotlib\.pyplot\s+as\s+plt', line):
+                matplotlib_import_index = i
+                break
+        
+        if matplotlib_import_index != -1:
+            style_code_block = create_academic_style_code_block(academic_options)
+            code_lines.insert(matplotlib_import_index + 1, style_code_block)
+            yield "已注入字体、字号和尺寸设置。"
+        else:
+            yield "警告：未找到 matplotlib 导入语句，无法注入样式代码。"
+
+        vector_format = academic_options.get('vector_format')
+        dpi = academic_options.get('dpi', 300)
+        code_lines = inject_savefig_before_show(code_lines, vector_format, filepath, dpi)
+        
+        final_code = '\n'.join(code_lines)
+
+    # 使用os.path.basename获取纯文件名，避免路径问题
+    original_filename = os.path.basename(filepath)
+    base, ext = os.path.splitext(original_filename)
+
+    # 构建指向正确输出目录的完整路径
+    new_filename = f"{base}_zh_revision{ext}"
+    new_filepath = os.path.join(output_folder, new_filename)
+    
+    try:
+        with open(new_filepath, 'w', encoding='utf-8') as f:
+            f.write(final_code)
+        yield f"处理完成！修改后的文件已保存至: {new_filepath}"
+        yield f"SUCCESS:{new_filename}"
+    except Exception as e:
+        yield f"保存文件失败: {e}"
+
 # --- 主程序入口 ---
 if __name__ == '__main__':
     # 获取用户输入

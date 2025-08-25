@@ -15,6 +15,6 @@ REM Start the web application
 echo Starting Flask server on http://localhost:5000
 echo Press Ctrl+C to stop the server
 echo.
-python main.py
+python academicplot.py
 
 pause
