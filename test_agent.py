@@ -5,7 +5,7 @@ Test script for the enhanced agent functionality
 
 import os
 import sys
-from enhanced_agent import process_python_file
+from core.enhanced_agent import process_python_file
 
 def test_agent():
     # Test file path

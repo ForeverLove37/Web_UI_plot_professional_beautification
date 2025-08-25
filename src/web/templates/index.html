@@ -17,6 +17,165 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="app-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h3>设置</h3>
+            </div>
+            <div class="sidebar-content">
+                <div class="settings-accordion">
+                    <!-- Basic Settings -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-target="basicSettings">
+                            <i class="fas fa-cog"></i>
+                            <h3>基本设置</h3>
+                            <i class="accordion-arrow fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content" id="basicSettings">
+                            <div class="setting-group">
+                                <label class="switch-label">
+                                    <span class="label-text">AI布局美化</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="beautifyToggle" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </label>
+                                <p class="setting-description">智能优化图表布局和排列</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Settings -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-target="academicSettings">
+                            <i class="fas fa-graduation-cap"></i>
+                            <h3>学术风格设置</h3>
+                            <i class="accordion-arrow fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content" id="academicSettings">
+                            <div class="setting-group">
+                                <label class="switch-label">
+                                    <span class="label-text">启用学术论文风格</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="academicToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </label>
+                                <p class="setting-description">应用学术期刊出版标准样式</p>
+                            </div>
+
+                            <div class="academic-options" id="academicOptions" style="display: none;">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="paperFormat">论文格式</label>
+                                        <select id="paperFormat" class="form-select">
+                                            {% for key, config in paper_formats.items() %}
+                                                <option value="{{ key }}">{{ config.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="layout">图表布局</label>
+                                        <select id="layout" class="form-select">
+                                            <option value="single">单栏</option>
+                                            <option value="double">双栏</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="vectorFormat">导出格式</label>
+                                        <select id="vectorFormat" class="form-select">
+                                            <option value="">不保存</option>
+                                            <option value="pdf">PDF</option>
+                                            <option value="svg">SVG</option>
+                                            <option value="eps">EPS</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="dpi">分辨率 (DPI)</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="dpi" min="72" max="1200" value="300" class="form-slider">
+                                            <span class="slider-value" id="dpiValue">300 DPI</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Settings -->
+                    <div class="accordion-item">
+                        <div class="accordion-header" data-target="customSettings">
+                            <i class="fas fa-sliders-h"></i>
+                            <h3>自定义设置</h3>
+                            <i class="accordion-arrow fas fa-chevron-down"></i>
+                        </div>
+                        <div class="accordion-content" id="customSettings">
+                            <div class="setting-group">
+                                <label class="switch-label">
+                                    <span class="label-text">启用自定义参数</span>
+                                    <label class="switch">
+                                        <input type="checkbox" id="customToggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </label>
+                                <p class="setting-description">手动调整详细参数设置</p>
+                            </div>
+
+                            <div class="custom-options" id="customOptions" style="display: none;">
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="fontSize">字体大小</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="fontSize" min="6" max="24" value="10" class="form-slider">
+                                            <span class="slider-value" id="fontSizeValue">10 pt</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="titleSize">标题大小</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="titleSize" min="8" max="24" value="12" class="form-slider">
+                                            <span class="slider-value" id="titleSizeValue">12 pt</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="figWidth">图表宽度</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="figWidth" min="1" max="20" step="0.1" value="3.35" class="form-slider">
+                                            <span class="slider-value" id="figWidthValue">3.35 英寸</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="figHeight">图表高度</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="figHeight" min="1" max="20" step="0.1" value="2.5" class="form-slider">
+                                            <span class="slider-value" id="figHeightValue">2.5 英寸</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="customDpi">自定义DPI</label>
+                                        <div class="slider-container">
+                                            <input type="range" id="customDpi" min="72" max="1200" value="300" class="form-slider">
+                                            <span class="slider-value" id="customDpiValue">300 DPI</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
@@ -30,7 +189,11 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <button class="btn-help" title="使用帮助">
+                    <button class="btn-lang" id="langToggle" title="切换语言">
+                        <i class="fas fa-globe"></i>
+                        <span>EN</span>
+                    </button>
+                    <button class="btn-help" id="userGuideLink" title="使用帮助">
                         <i class="fas fa-question-circle"></i>
                     </button>
                 </div>
@@ -39,9 +202,9 @@
 
         <!-- Main Content -->
         <main class="app-main">
-            <div class="main-grid">
-                <!-- Left Column - File Upload & Actions -->
-                <div class="left-column">
+            <div class="main-content">
+                <!-- File Upload & Actions -->
+                <div class="content-section">
                     <!-- File Upload Card -->
                     <div class="card upload-card">
                         <div class="card-header">
@@ -131,158 +294,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Right Column - Settings -->
-                <div class="right-column">
-                    <!-- Settings Accordion -->
-                    <div class="settings-accordion">
-                        <!-- Basic Settings -->
-                        <div class="accordion-item">
-                            <div class="accordion-header" data-target="basicSettings">
-                                <i class="fas fa-cog"></i>
-                                <h3>基本设置</h3>
-                                <i class="accordion-arrow fas fa-chevron-down"></i>
-                            </div>
-                            <div class="accordion-content" id="basicSettings">
-                                <div class="setting-group">
-                                    <label class="switch-label">
-                                        <span class="label-text">AI布局美化</span>
-                                        <label class="switch">
-                                            <input type="checkbox" id="beautifyToggle" checked>
-                                            <span class="slider"></span>
-                                        </label>
-                                    </label>
-                                    <p class="setting-description">智能优化图表布局和排列</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Academic Settings -->
-                        <div class="accordion-item">
-                            <div class="accordion-header" data-target="academicSettings">
-                                <i class="fas fa-graduation-cap"></i>
-                                <h3>学术风格设置</h3>
-                                <i class="accordion-arrow fas fa-chevron-down"></i>
-                            </div>
-                            <div class="accordion-content" id="academicSettings">
-                                <div class="setting-group">
-                                    <label class="switch-label">
-                                        <span class="label-text">启用学术论文风格</span>
-                                        <label class="switch">
-                                            <input type="checkbox" id="academicToggle">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </label>
-                                    <p class="setting-description">应用学术期刊出版标准样式</p>
-                                </div>
-
-                                <div class="academic-options" id="academicOptions" style="display: none;">
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label for="paperFormat">论文格式</label>
-                                            <select id="paperFormat" class="form-select">
-                                                {% for key, config in paper_formats.items() %}
-                                                    <option value="{{ key }}">{{ config.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="layout">图表布局</label>
-                                            <select id="layout" class="form-select">
-                                                <option value="single">单栏</option>
-                                                <option value="double">双栏</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="vectorFormat">导出格式</label>
-                                            <select id="vectorFormat" class="form-select">
-                                                <option value="">不保存</option>
-                                                <option value="pdf">PDF</option>
-                                                <option value="svg">SVG</option>
-                                                <option value="eps">EPS</option>
-                                            </select>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="dpi">分辨率 (DPI)</label>
-                                            <div class="slider-container">
-                                                <input type="range" id="dpi" min="72" max="1200" value="300" class="form-slider">
-                                                <span class="slider-value" id="dpiValue">300 DPI</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Custom Settings -->
-                        <div class="accordion-item">
-                            <div class="accordion-header" data-target="customSettings">
-                                <i class="fas fa-sliders-h"></i>
-                                <h3>自定义设置</h3>
-                                <i class="accordion-arrow fas fa-chevron-down"></i>
-                            </div>
-                            <div class="accordion-content" id="customSettings">
-                                <div class="setting-group">
-                                    <label class="switch-label">
-                                        <span class="label-text">启用自定义参数</span>
-                                        <label class="switch">
-                                            <input type="checkbox" id="customToggle">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </label>
-                                    <p class="setting-description">手动调整详细参数设置</p>
-                                </div>
-
-                                <div class="custom-options" id="customOptions" style="display: none;">
-                                    <div class="form-grid">
-                                        <div class="form-group">
-                                            <label for="fontSize">字体大小</label>
-                                            <div class="slider-container">
-                                                <input type="range" id="fontSize" min="6" max="24" value="10" class="form-slider">
-                                                <span class="slider-value" id="fontSizeValue">10 pt</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="titleSize">标题大小</label>
-                                            <div class="slider-container">
-                                                <input type="range" id="titleSize" min="8" max="24" value="12" class="form-slider">
-                                                <span class="slider-value" id="titleSizeValue">12 pt</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="figWidth">图表宽度</label>
-                                            <div class="slider-container">
-                                                <input type="range" id="figWidth" min="1" max="20" step="0.1" value="3.35" class="form-slider">
-                                                <span class="slider-value" id="figWidthValue">3.35 英寸</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="figHeight">图表高度</label>
-                                            <div class="slider-container">
-                                                <input type="range" id="figHeight" min="1" max="20" step="0.1" value="2.5" class="form-slider">
-                                                <span class="slider-value" id="figHeightValue">2.5 英寸</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="customDpi">自定义DPI</label>
-                                            <div class="slider-container">
-                                                <input type="range" id="customDpi" min="72" max="1200" value="300" class="form-slider">
-                                                <span class="slider-value" id="customDpiValue">300 DPI</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
 
@@ -291,8 +302,8 @@
             <div class="footer-content">
                 <p>&copy; 2024 AcademicPlot Pro. 由 DeepSeek AI 提供技术支持</p>
                 <div class="footer-links">
-                    <a href="#" class="footer-link" id="userGuideLink">使用指南</a>
-                    <a href="#" class="footer-link">反馈问题</a>
+                    <a href="#" class="footer-link" id="userGuideLinkFooter">使用指南</a>
+                    <a href="mailto:agnesgenesis37@gmail.com" class="footer-link">反馈问题</a>
                     <a href="#" class="footer-link">关于我们</a>
                 </div>
             </div>
@@ -313,7 +324,7 @@
                 </div>
                 <div class="guide-step">
                     <h3>步骤 2: 配置设置</h3>
-                    <p>打开右侧的设置面板（基本设置、学术风格、自定义）来定制美化选项。</p>
+                    <p>打开左侧的设置面板（基本设置、学术风格、自定义）来定制美化选项。</p>
                 </div>
                 <div class="guide-step">
                     <h3>步骤 3: 开始处理</h3>

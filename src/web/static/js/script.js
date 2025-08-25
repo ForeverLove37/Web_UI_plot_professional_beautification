@@ -5,6 +5,8 @@ class AcademicPlotApp {
     constructor() {
         this.currentFile = null;
         this.isProcessing = false;
+        this.sidebarExpanded = false;
+        this.currentLanguage = 'zh'; // 'zh' for Chinese, 'en' for English
         this.init();
     }
 
@@ -98,6 +100,11 @@ class AcademicPlotApp {
             this.showUserGuide();
         });
 
+        document.getElementById('userGuideLinkFooter').addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showUserGuide();
+        });
+
         // Modal close button
         document.querySelector('.modal-close').addEventListener('click', () => {
             this.hideUserGuide();
@@ -108,6 +115,21 @@ class AcademicPlotApp {
             if (e.target === document.getElementById('userGuideModal')) {
                 this.hideUserGuide();
             }
+        });
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            this.toggleSidebar();
+        });
+
+        // Language toggle
+        document.getElementById('langToggle').addEventListener('click', () => {
+            this.toggleLanguage();
+        });
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            this.toggleSidebar();
         });
     }
 
@@ -455,6 +477,260 @@ class AcademicPlotApp {
         const modal = document.getElementById('userGuideModal');
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
+    }
+
+    toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const main = document.querySelector('.app-main');
+        
+        // Toggle expanded state
+        this.sidebarExpanded = !sidebar.classList.contains('sidebar-expanded');
+        
+        if (this.sidebarExpanded) {
+            sidebar.classList.add('sidebar-expanded');
+            main.classList.add('sidebar-expanded');
+        } else {
+            sidebar.classList.remove('sidebar-expanded');
+            main.classList.remove('sidebar-expanded');
+        }
+    }
+
+    toggleLanguage() {
+        this.currentLanguage = this.currentLanguage === 'zh' ? 'en' : 'zh';
+        this.updateLanguageUI();
+        
+        // Update the language toggle button text
+        const langToggle = document.getElementById('langToggle');
+        const langText = langToggle.querySelector('span');
+        langText.textContent = this.currentLanguage === 'zh' ? 'EN' : '中文';
+    }
+
+    updateLanguageUI() {
+        // Define translations for all UI elements
+        const translations = {
+            zh: {
+                // Header
+                'appTitle': 'AcademicPlot Pro',
+                'appSubtitle': 'AI驱动的学术图表翻译与美化专家',
+                'langToggle': 'EN',
+                
+                // Upload card
+                'uploadTitle': '上传Python图表文件',
+                'uploadDragDrop': '拖放文件到此处',
+                'uploadClick': '或点击选择Python文件 (.py)',
+                'uploadFileTypes': '支持 .py 格式文件',
+                
+                // Action card
+                'actionTitle': '开始处理',
+                'processButton': '开始AI处理',
+                'processingText': '处理中...',
+                'waitingStatus': '等待文件上传',
+                
+                // Results card
+                'resultsTitle': '处理结果',
+                'resultsPlaceholder': '处理完成后将显示结果',
+                'resultsSuccess': '处理成功！',
+                'resultsDownload': '文件已处理完成，可以下载结果',
+                'downloadButton': '下载处理结果',
+                
+                // Sidebar
+                'sidebarTitle': '设置',
+                'basicSettings': '基本设置',
+                'beautifyLabel': 'AI布局美化',
+                'beautifyDesc': '智能优化图表布局和排列',
+                
+                'academicSettings': '学术风格设置',
+                'academicLabel': '启用学术论文风格',
+                'academicDesc': '应用学术期刊出版标准样式',
+                
+                'customSettings': '自定义设置',
+                'customLabel': '启用自定义参数',
+                'customDesc': '手动调整详细参数设置',
+                
+                // Academic options
+                'paperFormat': '论文格式',
+                'layout': '图表布局',
+                'vectorFormat': '导出格式',
+                'dpi': '分辨率 (DPI)',
+                'noSave': '不保存',
+                'singleColumn': '单栏',
+                'doubleColumn': '双栏',
+                
+                // Custom options
+                'fontSize': '字体大小',
+                'titleSize': '标题大小',
+                'figWidth': '图表宽度',
+                'figHeight': '图表高度',
+                'customDpi': '自定义DPI',
+                
+                // Footer
+                'copyright': '© 2024 AcademicPlot Pro. 由 DeepSeek AI 提供技术支持',
+                'userGuide': '使用指南',
+                'feedback': '反馈问题',
+                'about': '关于我们',
+                
+                // User Guide Modal
+                'modalTitle': '使用指南',
+                'step1Title': '步骤 1: 上传文件',
+                'step1Desc': '将您的Python绘图脚本文件 (.py) 拖放到上传区域，或点击选择文件。',
+                'step2Title': '步骤 2: 配置设置',
+                'step2Desc': '打开左侧的设置面板（基本设置、学术风格、自定义）来定制美化选项。',
+                'step3Title': '步骤 3: 开始处理',
+                'step3Desc': '点击"开始AI处理"按钮开始处理您的文件。',
+                'step4Title': '步骤 4: 下载结果',
+                'step4Desc': '处理完成后，处理结果区域将显示下载链接。'
+            },
+            en: {
+                // Header
+                'appTitle': 'AcademicPlot Pro',
+                'appSubtitle': 'AI-powered Academic Chart Translation & Beautification Expert',
+                'langToggle': '中文',
+                
+                // Upload card
+                'uploadTitle': 'Upload Python Chart File',
+                'uploadDragDrop': 'Drag and drop file here',
+                'uploadClick': 'or click to select Python file (.py)',
+                'uploadFileTypes': 'Supports .py format files',
+                
+                // Action card
+                'actionTitle': 'Start Processing',
+                'processButton': 'Start AI Processing',
+                'processingText': 'Processing...',
+                'waitingStatus': 'Waiting for file upload',
+                
+                // Results card
+                'resultsTitle': 'Processing Results',
+                'resultsPlaceholder': 'Results will be displayed after processing',
+                'resultsSuccess': 'Processing Successful!',
+                'resultsDownload': 'File processed successfully, ready for download',
+                'downloadButton': 'Download Result',
+                
+                // Sidebar
+                'sidebarTitle': 'Settings',
+                'basicSettings': 'Basic Settings',
+                'beautifyLabel': 'AI Layout Beautification',
+                'beautifyDesc': 'Intelligent chart layout optimization',
+                
+                'academicSettings': 'Academic Style Settings',
+                'academicLabel': 'Enable Academic Paper Style',
+                'academicDesc': 'Apply academic journal publishing standards',
+                
+                'customSettings': 'Custom Settings',
+                'customLabel': 'Enable Custom Parameters',
+                'customDesc': 'Manual detailed parameter adjustment',
+                
+                // Academic options
+                'paperFormat': 'Paper Format',
+                'layout': 'Chart Layout',
+                'vectorFormat': 'Export Format',
+                'dpi': 'Resolution (DPI)',
+                'noSave': 'Don\'t save',
+                'singleColumn': 'Single Column',
+                'doubleColumn': 'Double Column',
+                
+                // Custom options
+                'fontSize': 'Font Size',
+                'titleSize': 'Title Size',
+                'figWidth': 'Chart Width',
+                'figHeight': 'Chart Height',
+                'customDpi': 'Custom DPI',
+                
+                // Footer
+                'copyright': '© 2024 AcademicPlot Pro. Powered by DeepSeek AI',
+                'userGuide': 'User Guide',
+                'feedback': 'Feedback',
+                'about': 'About Us',
+                
+                // User Guide Modal
+                'modalTitle': 'User Guide',
+                'step1Title': 'Step 1: Upload File',
+                'step1Desc': 'Drag and drop your Python plotting script file (.py) to the upload area, or click to select a file.',
+                'step2Title': 'Step 2: Configure Settings',
+                'step2Desc': 'Open the settings panel on the left (Basic, Academic Style, Custom) to customize beautification options.',
+                'step3Title': 'Step 3: Start Processing',
+                'step3Desc': 'Click the "Start AI Processing" button to begin processing your file.',
+                'step4Title': 'Step 4: Download Results',
+                'step4Desc': 'After processing is complete, the results area will display download links.'
+            }
+        };
+
+        const lang = translations[this.currentLanguage];
+        
+        // Update all text elements
+        document.querySelector('.logo-text h1').textContent = lang.appTitle;
+        document.querySelector('.subtitle').textContent = lang.appSubtitle;
+        
+        // Upload card
+        document.querySelector('.upload-card h2').textContent = lang.uploadTitle;
+        document.querySelector('.drop-content h3').textContent = lang.uploadDragDrop;
+        document.querySelector('.drop-content p').textContent = lang.uploadClick;
+        document.querySelector('.file-types').textContent = lang.uploadFileTypes;
+        
+        // Action card
+        document.querySelector('.action-card h2').textContent = lang.actionTitle;
+        document.querySelector('.btn-text').textContent = lang.processButton;
+        document.querySelector('.btn-loading').textContent = lang.processingText;
+        document.querySelector('.status-item span').textContent = lang.waitingStatus;
+        
+        // Results card
+        document.querySelector('.results-card h2').textContent = lang.resultsTitle;
+        document.querySelector('.results-placeholder p').textContent = lang.resultsPlaceholder;
+        document.querySelector('.results-success h3').textContent = lang.resultsSuccess;
+        document.querySelector('.results-success p').textContent = lang.resultsDownload;
+        document.querySelector('.btn-download-result').textContent = lang.downloadButton;
+        
+        // Sidebar
+        document.querySelector('.sidebar-header h3').textContent = lang.sidebarTitle;
+        
+        // Basic settings
+        document.querySelector('[data-target="basicSettings"] h3').textContent = lang.basicSettings;
+        document.querySelector('#basicSettings .label-text').textContent = lang.beautifyLabel;
+        document.querySelector('#basicSettings .setting-description').textContent = lang.beautifyDesc;
+        
+        // Academic settings
+        document.querySelector('[data-target="academicSettings"] h3').textContent = lang.academicSettings;
+        document.querySelector('#academicSettings .label-text').textContent = lang.academicLabel;
+        document.querySelector('#academicSettings .setting-description').textContent = lang.academicDesc;
+        
+        // Custom settings
+        document.querySelector('[data-target="customSettings"] h3').textContent = lang.customSettings;
+        document.querySelector('#customSettings .label-text').textContent = lang.customLabel;
+        document.querySelector('#customSettings .setting-description').textContent = lang.customDesc;
+        
+        // Academic options labels
+        document.querySelector('#academicOptions label[for="paperFormat"]').textContent = lang.paperFormat;
+        document.querySelector('#academicOptions label[for="layout"]').textContent = lang.layout;
+        document.querySelector('#academicOptions label[for="vectorFormat"]').textContent = lang.vectorFormat;
+        document.querySelector('#academicOptions label[for="dpi"]').textContent = lang.dpi;
+        
+        // Update select options
+        document.querySelector('#vectorFormat option[value=""]').textContent = lang.noSave;
+        document.querySelector('#layout option[value="single"]').textContent = lang.singleColumn;
+        document.querySelector('#layout option[value="double"]').textContent = lang.doubleColumn;
+        
+        // Custom options labels
+        document.querySelector('#customOptions label[for="fontSize"]').textContent = lang.fontSize;
+        document.querySelector('#customOptions label[for="titleSize"]').textContent = lang.titleSize;
+        document.querySelector('#customOptions label[for="figWidth"]').textContent = lang.figWidth;
+        document.querySelector('#customOptions label[for="figHeight"]').textContent = lang.figHeight;
+        document.querySelector('#customOptions label[for="customDpi"]').textContent = lang.customDpi;
+        
+        // Footer
+        document.querySelector('.footer-content p').textContent = lang.copyright;
+        document.querySelectorAll('.footer-link')[0].textContent = lang.userGuide;
+        document.querySelectorAll('.footer-link')[1].textContent = lang.feedback;
+        document.querySelectorAll('.footer-link')[2].textContent = lang.about;
+
+        // User Guide Modal
+        document.querySelector('#userGuideModal .modal-header h2').textContent = lang.modalTitle;
+        document.querySelector('#userGuideModal .guide-step:nth-child(1) h3').textContent = lang.step1Title;
+        document.querySelector('#userGuideModal .guide-step:nth-child(1) p').textContent = lang.step1Desc;
+        document.querySelector('#userGuideModal .guide-step:nth-child(2) h3').textContent = lang.step2Title;
+        document.querySelector('#userGuideModal .guide-step:nth-child(2) p').textContent = lang.step2Desc;
+        document.querySelector('#userGuideModal .guide-step:nth-child(3) h3').textContent = lang.step3Title;
+        document.querySelector('#userGuideModal .guide-step:nth-child(3) p').textContent = lang.step3Desc;
+        document.querySelector('#userGuideModal .guide-step:nth-child(4) h3').textContent = lang.step4Title;
+        document.querySelector('#userGuideModal .guide-step:nth-child(4) p').textContent = lang.step4Desc;
     }
 }
 

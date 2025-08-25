@@ -142,11 +142,93 @@ body {
 .app-main {
     flex: 1;
     padding: var(--spacing-xl);
+    margin-left: 60px; /* Space for collapsed sidebar */
+    transition: margin-left var(--transition-normal);
 }
 
+.app-main.sidebar-expanded {
+    margin-left: 320px; /* Space for expanded sidebar */
+}
+
+/* ===== SIDEBAR STYLES ===== */
+.app-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 60px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    transition: width var(--transition-normal);
+    overflow: hidden;
+}
+
+.app-sidebar:hover,
+.app-sidebar.sidebar-expanded {
+    width: 320px;
+}
+
+.sidebar-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-height: 60px;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    transition: var(--transition-fast);
+}
+
+.sidebar-toggle:hover {
+    background: var(--background);
+    color: var(--primary);
+}
+
+.sidebar-header h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.app-sidebar:hover .sidebar-header h3,
+.app-sidebar.sidebar-expanded .sidebar-header h3 {
+    opacity: 1;
+}
+
+.sidebar-content {
+    padding: var(--spacing-md);
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+}
+
+.sidebar-content .settings-accordion {
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+}
+
+.app-sidebar:hover .sidebar-content .settings-accordion,
+.app-sidebar.sidebar-expanded .sidebar-content .settings-accordion {
+    opacity: 1;
+}
+
+/* Adjust main content layout for sidebar */
 .main-grid {
     display: grid;
-    grid-template-columns: 1fr 400px;
+    grid-template-columns: 1fr;
     gap: var(--spacing-xl);
     max-width: 1400px;
     margin: 0 auto;
@@ -159,11 +241,7 @@ body {
 }
 
 .right-column {
-    position: sticky;
-    top: var(--spacing-xl);
-    height: fit-content;
-    max-height: calc(100vh - 120px);
-    overflow-y: auto;
+    display: none; /* Hide the old right column since we have sidebar now */
 }
 
 /* ===== CARDS ===== */

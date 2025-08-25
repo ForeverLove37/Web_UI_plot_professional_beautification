@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# --- 安全类型转换辅助函数 ---
+# --- safe cast assistant function ---
 def safe_cast(value, cast_type, default=None):
-    """安全地将值转换为指定类型，失败则返回默认值。"""
+    """Safely cast a value to the specified type, returning default on failure."""
     if value is None or value == '':
         return default
     try:
@@ -41,14 +41,11 @@ def allowed_file(filename):
 def index():
     return render_template('index.html', paper_formats=PAPER_FORMATS)
 
-# 在 src/web/app.py 文件中
-
-# ... 其他路由和函数 ...
+# ... other routes and functions ...
 
 @app.route('/process', methods=['POST'])
 def process_file():
-    # ------------------ 关键改动：在请求上下文中立即处理文件 ------------------
-    # 检查文件是否存在
+    # check the existence of the file
     if 'file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
     
@@ -59,14 +56,14 @@ def process_file():
     if not allowed_file(file.filename):
         return jsonify({"error": "Only Python files (.py) are allowed"}), 400
 
-    # 1. 立即保存文件到临时路径，而不是传递文件流对象
+    # 1. Immediately save the file to a temporary path instead of passing the file stream object
     filename = secure_filename(file.filename)
-    # 确保上传目录存在
+    # Ensure the upload directory exists
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     file.save(filepath)
 
-    # 从表单中提取所有处理选项
+    # Extract all processing options from the form
     options = {
         'beautify': request.form.get('beautify') == 'true',
         'academic_options': {
@@ -89,11 +86,11 @@ def process_file():
         }
         options['academic_options']['custom_params'] = {k: v for k, v in custom_params.items() if v is not None}
 
-    # ------------------ 定义接收文件路径和选项的生成器 ------------------
-    # 注意 generate 现在接收 filepath (字符串路径), 而不是 file_storage (文件对象)
+    # ------------------ Definition of output filepath and the generator ------------------
+    # Note that generate now takes filepath (string path) instead of file_storage (file object)
     def generate(saved_filepath, opts):
         try:
-            # 2. 生成器现在直接使用已保存的文件路径进行处理
+            # 2. The generator now directly uses the saved file path for processing
             output_folder = app.config['OUTPUT_FOLDER']
             for status in process_python_file_streaming(saved_filepath, output_folder, **opts):
                 if status.startswith("SUCCESS:"):
@@ -105,13 +102,13 @@ def process_file():
                     yield f'data: {json.dumps(status_data, ensure_ascii=False)}\n\n'
             
         except Exception as e:
-            # 3. 确保这里使用的是标准的 logging 模块
+            # 3. Ensure that the standard logging module is used here
             logging.error(f"An error occurred during streaming: {e}", exc_info=True)
             error_data = {"error": f"An unexpected error occurred in the stream: {str(e)}"}
             yield f'data: {json.dumps(error_data)}\n\n'
 
-    # ------------------ 启动生成器并返回流式响应 ------------------
-    # 将保存好的文件路径和选项作为参数传给 generate
+    # ------------------ Start the generator and return streaming response ------------------
+    # Pass the saved file path and options as arguments to generate
     return Response(generate(filepath, options), mimetype='text/event-stream')
 
 @app.route('/download/<filename>')
