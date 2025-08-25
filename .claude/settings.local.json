@@ -11,6 +11,9 @@
       "Bash(git add:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "D:\\Projects\\Temp_Work_Folder - Copy"
+    ]
   }
 }

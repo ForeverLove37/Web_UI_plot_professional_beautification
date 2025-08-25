@@ -55,7 +55,7 @@ class AcademicPlotApp {
 
         // Remove file button
         document.getElementById('removeFile').addEventListener('click', () => {
-            this.removeFile();
+            this.resetUI();
         });
 
         // Process button
@@ -187,6 +187,29 @@ class AcademicPlotApp {
         this.hideResults();
     }
 
+    resetUI() {
+        // Reset processing state
+        this.isProcessing = false;
+        
+        // Reset file input and UI
+        this.removeFile();
+        
+        // Reset loading state
+        this.hideLoading();
+        
+        // Reset process button
+        this.updateProcessButton();
+        
+        // Reset any form toggles to default state
+        document.getElementById('academicToggle').checked = false;
+        this.toggleAcademicOptions(false);
+        document.getElementById('customToggle').checked = false;
+        this.toggleCustomOptions(false);
+        
+        // Reset status to initial state
+        this.updateStatus('等待文件上传', 'success');
+    }
+
     updateProcessButton() {
         const processBtn = document.getElementById('processBtn');
         processBtn.disabled = !this.currentFile || this.isProcessing;
@@ -224,30 +247,55 @@ class AcademicPlotApp {
         }
 
         try {
+            // Use fetch with ReadableStream for Server-Sent Events
             const response = await fetch('/process', {
                 method: 'POST',
                 body: formData
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `服务器错误: ${response.status} ${response.statusText}`);
+                throw new Error(`服务器错误: ${response.status} ${response.statusText}`);
             }
 
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showSuccess(result.download_url);
-                this.updateStatus('处理完成！', 'success');
-            } else {
-                throw new Error(result.error || '处理失败');
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = JSON.parse(line.substring(6)); // Remove 'data: ' prefix
+                        
+                        if (data.error) {
+                            throw new Error(data.error);
+                        }
+                        
+                        if (data.status) {
+                            this.updateStatus(data.status, 'warning');
+                        }
+                        
+                        if (data.success) {
+                            this.showSuccess(data.download_url);
+                            this.updateStatus('处理完成！', 'success');
+                            // Don't reset UI completely here - keep results visible
+                            this.isProcessing = false;
+                            this.hideLoading();
+                            this.updateProcessButton();
+                            return;
+                        }
+                    }
+                }
             }
-            
+
         } catch (error) {
             console.error('Processing error:', error);
             this.showError('处理错误: ' + error.message);
             this.updateStatus('处理失败', 'error');
-        } finally {
             this.isProcessing = false;
             this.hideLoading();
             this.updateProcessButton();
