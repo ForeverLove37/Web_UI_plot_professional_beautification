@@ -40,6 +40,8 @@ Thumbs.db
 uploads/temp/*
 uploads/outputs/*
 !uploads/outputs/.gitkeep
+logs&histories/
+.claude/
 
 # Logs
 *.log

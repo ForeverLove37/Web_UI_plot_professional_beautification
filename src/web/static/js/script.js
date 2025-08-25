@@ -215,7 +215,7 @@ class AcademicPlotApp {
         processBtn.disabled = !this.currentFile || this.isProcessing;
     }
 
-    processFile() {
+    async processFile() {
         if (!this.currentFile || this.isProcessing) return;
 
         this.isProcessing = true;
@@ -299,7 +299,7 @@ class AcademicPlotApp {
             this.isProcessing = false;
             this.hideLoading();
             this.updateProcessButton();
-        });
+        }
     }
 
     toggleAcademicOptions(enabled) {
