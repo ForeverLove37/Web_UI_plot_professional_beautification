@@ -208,14 +208,14 @@ def refactor_and_style_code(code_content: str, style_options: Dict[str, Any]) ->
     if not instructions:
         return None
         
-    prompt = f"""
+    prompt = """
 你是一位顶级的 Python 数据可视化专家，尤其擅长为学术期刊准备符合出版要求的高质量图表。
 
 你的任务是：接收一段 Python 绘图脚本，并根据下面的具体要求对其进行重构和优化。
 
 **核心要求**:
 1. **保留原始意图**: 必须完整保留原始代码的数据处理逻辑、绘图类型（如折线图、柱状图）以及所有中文标签和注释。你的工作是美化和规范化，而不是改变图表的核心内容。
-{"\n".join(instructions)}
+""" + "\n".join(instructions) + """
 
 **输出规则**:
 - **纯代码输出**: 你的回复必须且只能是经过重构和优化后的完整 Python 代码。
@@ -225,7 +225,7 @@ def refactor_and_style_code(code_content: str, style_options: Dict[str, Any]) ->
 **这是需要你处理的原始 Python 脚本**:
 
 ```python
-{code_content}
+""" + code_content + """
 ```
 """
     
